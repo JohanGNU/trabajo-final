@@ -1,0 +1,8 @@
+﻿escenario,descripcion,estado,requeridos,asignados,deficit,turnos_junior,turnos_senior,costo_personal_cop,penalizacion_cop,costo_total_cop,restricciones_ok,var_vs_base_pct
+Base,Datos originales,Optimal,110,110,0,92,18,12922000.0,0.0,12922000.0,True,0.0
+E1 Demanda +20%,Temporada alta: llegadas de tickets 20 % mayores,Optimal,129,129,0,110,19,14924500.0,0.0,14924500.0,True,15.5
+E2 Demanda +40%,Pico de demanda: llegadas 40 % mayores,Optimal,145,140,5,110,30,16261000.0,5000000.0,21261000.0,True,64.53
+E3 Demanda +40% y 6 turnos,Pico de demanda cubierto con un turno extra por técnico,Optimal,145,145,0,127,18,16532000.0,0.0,16532000.0,True,27.94
+E4 Ausentismo 30%,"Cada turno disponible se pierde con probabilidad 0,30",Optimal,110,110,0,92,18,12922000.0,0.0,12922000.0,True,0.0
+E5 Dominical 100%,Recargo dominical sube de 75 % a 100 %,Optimal,110,110,0,92,18,13183250.0,0.0,13183250.0,True,2.02
+E6 Sin mínimo semanal,Se elimina el mínimo contractual de 3 turnos,Optimal,110,110,0,110,0,11932000.0,0.0,11932000.0,True,-7.66

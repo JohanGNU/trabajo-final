@@ -1,0 +1,7 @@
+﻿turno,dia,franja,tipo,lambda_tickets_hora,requeridos,asignados,deficit
+Sab-Mañana,Sab,Mañana,Redes,1.097,1,1,0
+Sab-Mañana,Sab,Mañana,Software,1.702,2,2,0
+Sab-Tarde,Sab,Tarde,Redes,0.848,1,1,0
+Sab-Tarde,Sab,Tarde,Software,1.428,1,1,0
+Sab-Noche,Sab,Noche,Redes,0.193,1,1,0
+Sab-Noche,Sab,Noche,Software,0.32,1,1,0
