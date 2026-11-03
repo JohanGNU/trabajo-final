@@ -2,13 +2,13 @@
 Carga de datos: convierte los CSV de data/ en una `Instancia` con los conjuntos
 y parámetros del modelo matemático.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pandas as pd
 
 from src import config
-from src.demanda import calcular_requeridos
+from src.demanda import calcular_minimos, calcular_requeridos
 
 
 @dataclass
@@ -28,7 +28,9 @@ class Instancia:
     certificado: dict       # (t, k) -> q_tk en {0, 1}
     lam: dict               # (s, k) -> tickets/hora que llegan
     mu: dict                # k -> tickets/hora que atiende un técnico
-    requeridos: dict        # (s, k) -> r_sk, técnicos requeridos
+    meta_espera_min: float  # meta de espera media en cola Wq (minutos)
+    requeridos: dict        # (s, k) -> r_sk, técnicos para cumplir la meta (M/M/c)
+    minimos: dict           # (s, k) -> m_sk, técnicos para que la cola sea estable
     hmin: dict              # t -> turnos mínimos por semana
     hmax: dict              # t -> turnos máximos por semana
 
@@ -39,6 +41,16 @@ class Instancia:
     def puede_atender(self, t: str, s: str, k: str) -> bool:
         """True si el técnico t está disponible en s y certificado en k."""
         return self.disponible[t, s] == 1 and self.certificado[t, k] == 1
+
+
+def con_demanda(inst: Instancia, lam: dict | None = None,
+                meta_espera_min: float | None = None) -> Instancia:
+    """Copia de la instancia con otra demanda y/o meta; recalcula r y m."""
+    lam = inst.lam if lam is None else lam
+    meta = inst.meta_espera_min if meta_espera_min is None else meta_espera_min
+    return replace(inst, lam=lam, meta_espera_min=meta,
+                   requeridos=calcular_requeridos(lam, inst.mu, meta),
+                   minimos=calcular_minimos(lam, inst.mu))
 
 
 def costo_turno(costo_base: float, dia: str, franja: str,
@@ -79,7 +91,9 @@ def cargar_instancia(directorio: Path = config.DIR_DATOS, nombre: str = "base") 
         franjas=list(config.FRANJAS), tipos=list(config.TIPOS), turnos=turnos,
         info_turno=info_turno, nivel=dict(zip(df_tec["tecnico"], df_tec["nivel"])),
         costo_base=base, costo=costo, disponible=disponible, certificado=certificado, lam=lam, mu=mu,
-        requeridos=calcular_requeridos(lam, mu),
+        meta_espera_min=config.META_ESPERA_MIN,
+        requeridos=calcular_requeridos(lam, mu, config.META_ESPERA_MIN),
+        minimos=calcular_minimos(lam, mu),
         hmin=dict(zip(df_tec["tecnico"], df_tec["hmin"])),
         hmax=dict(zip(df_tec["tecnico"], df_tec["hmax"])),
     )
@@ -107,7 +121,9 @@ def subinstancia(inst: Instancia, dias: list, tipos: list, n_tecnicos: int,
         disponible={(t, s): inst.disponible[t, s] for t in tecnicos for s in turnos},
         certificado={(t, k): inst.certificado[t, k] for t in tecnicos for k in tipos},
         lam=lam, mu={k: inst.mu[k] for k in tipos},
+        meta_espera_min=inst.meta_espera_min,
         requeridos={key: inst.requeridos[key] for key in lam},
+        minimos={key: inst.minimos[key] for key in lam},
         hmin={t: hmin for t in tecnicos},
         hmax={t: min(inst.hmax[t], len(dias)) for t in tecnicos},
     )

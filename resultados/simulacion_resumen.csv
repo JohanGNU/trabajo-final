@@ -1,0 +1,4 @@
+﻿plan,replicas,tickets_por_semana,wq_media_min,ic95_inf_min,ic95_sup_min,wq_p90_min,pct_espera_mayor_meta,sin_atender_al_cierre
+Base,30,876.9,10.29,9.19,11.4,29.09,15.62,0.57
+E3 Hasta 6 turnos,30,874.6,4.54,4.0,5.08,13.13,9.23,0.1
+E7 Regla 85% (sin colas),30,875.1,30.16,26.7,33.61,84.03,36.0,0.83

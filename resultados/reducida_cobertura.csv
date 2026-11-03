@@ -1,7 +1,7 @@
-﻿turno,dia,franja,tipo,lambda_tickets_hora,requeridos,asignados,deficit
-Sab-Mañana,Sab,Mañana,Redes,1.097,1,1,0
-Sab-Mañana,Sab,Mañana,Software,1.702,2,2,0
-Sab-Tarde,Sab,Tarde,Redes,0.848,1,1,0
-Sab-Tarde,Sab,Tarde,Software,1.428,1,1,0
-Sab-Noche,Sab,Noche,Redes,0.193,1,1,0
-Sab-Noche,Sab,Noche,Software,0.32,1,1,0
+﻿turno,dia,franja,tipo,lambda_tickets_hora,minimos,requeridos,asignados,deficit,deficit_estable,utilizacion,wq_min,cumple_meta
+Sab-Mañana,Sab,Mañana,Redes,1.097,1,2,2,0,0,0.3657,6.17,True
+Sab-Mañana,Sab,Mañana,Software,1.702,1,2,2,0,0,0.4255,6.63,True
+Sab-Tarde,Sab,Tarde,Redes,0.848,1,2,1,1,0,0.5653,52.02,False
+Sab-Tarde,Sab,Tarde,Software,1.428,1,2,2,0,0,0.357,4.38,True
+Sab-Noche,Sab,Noche,Redes,0.193,1,1,1,0,0,0.1287,5.91,True
+Sab-Noche,Sab,Noche,Software,0.32,1,1,1,0,0,0.16,5.71,True

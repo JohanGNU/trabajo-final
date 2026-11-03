@@ -7,19 +7,25 @@ Uso:
     python main.py --todo   -> ejecuta todo de principio a fin (sin preguntas)
 """
 import argparse
+from dataclasses import replace
+
+import pandas as pd
 
 from data.generar_datos import generar_datos
 from src import config
 from src.datos import Instancia, cargar_instancia, subinstancia
-from src.escenarios import barrido_demanda, correr_escenarios
+from src.escenarios import ESCENARIOS, barrido_meta_espera, correr_escenarios, indicadores
 from src.excel_solver import crear_libro_solver
 from src.modelo import Resultado, resolver, verificar_solucion
 from src.reportes import (exportar_instancia, generar_graficos, guardar_escenarios,
-                          guardar_tablas)
+                          guardar_simulacion, guardar_tablas)
+from src.simulacion import N_REPLICAS, comparar_por_cola, resumir, simular_plan
 
 # Instancia reducida que se verifica en Excel Solver (máximo 200 variables)
-REDUCIDA = {"dias": ["Sab"], "tipos": ["Redes", "Software"], "n_tecnicos": 10}
+REDUCIDA = {"dias": ["Sab"], "tipos": ["Redes", "Software"], "n_tecnicos": 9}
 LIBRO_SOLVER = config.RAIZ / "verificacion_solver.xlsx"
+# Planes que se prueban en la simulación: el base, la mejor alternativa y la regla sin colas
+PLANES_SIMULADOS = ["Base", "E3 Hasta 6 turnos", "E7 Regla 85% (sin colas)"]
 
 
 def mostrar_resultado(inst: Instancia, res: Resultado) -> None:
@@ -30,10 +36,13 @@ def mostrar_resultado(inst: Instancia, res: Resultado) -> None:
     print(f"Estado del solver: {res.estado} (tiempo {res.tiempo_s:.2f} s)")
     print(f"Costo de personal:  {res.costo_personal:>14,.0f} COP")
     print(f"Penalización déficit:{res.costo_deficit:>14,.0f} COP")
-    print(f"Costo total:        {res.costo_total:>14,.0f} COP")
-    req, asig = res.cobertura["requeridos"].sum(), res.cobertura["asignados"].sum()
-    print(f"Técnico-turnos requeridos: {req} | asignados: {asig} | "
-          f"déficit: {res.cobertura['deficit'].sum()}")
+    print(f"Función objetivo:   {res.costo_total:>14,.0f} COP")
+    ind = indicadores(inst, res)
+    print(f"Técnico-turnos requeridos (M/M/c, Wq <= {inst.meta_espera_min:g} min): "
+          f"{ind['requeridos']} | asignados: {ind['asignados']} | déficit: {ind['deficit']} "
+          f"(~{ind['tecnicos_faltantes']} técnicos)")
+    print(f"Colas que cumplen la meta: {ind['colas_cumplen_meta_pct']} % | "
+          f"espera media: {ind['wq_promedio_min']} min | colas inestables: {ind['colas_inestables']}")
     errores = verificar_solucion(inst, res)
     if errores:
         print(f"ATENCIÓN: {len(errores)} restricciones violadas:")
@@ -88,15 +97,38 @@ def opcion_escenarios() -> None:
     asegurar_datos()
     base = cargar_instancia()
     tabla, _ = correr_escenarios(base)
-    barrido = barrido_demanda(base)
+    barrido = barrido_meta_espera(base)
+    formato = {"costo_personal_cop": "{:,.0f}".format}
     print("\n=== Escenarios ===")
     columnas = ["escenario", "estado", "requeridos", "asignados", "deficit",
-                "costo_total_cop", "var_vs_base_pct", "restricciones_ok"]
-    print(tabla[columnas].to_string(index=False, formatters={"costo_total_cop": "{:,.0f}".format}))
-    print("\n=== Barrido de demanda ===")
-    print(barrido.to_string(index=False, formatters={"costo_personal_cop": "{:,.0f}".format}))
+                "colas_cumplen_meta_pct", "wq_promedio_min", "costo_personal_cop",
+                "var_costo_vs_base_pct", "restricciones_ok"]
+    print(tabla[columnas].to_string(index=False, formatters=formato))
+    print("\n=== Barrido de la meta de espera ===")
+    print(barrido.to_string(index=False, formatters=formato))
     print("Archivos generados:")
-    for r in guardar_escenarios(tabla, barrido):
+    for r in guardar_escenarios(tabla, barrido, base.meta_espera_min):
+        print("  -", r.relative_to(config.RAIZ))
+
+
+def opcion_simulacion() -> None:
+    asegurar_datos()
+    base = cargar_instancia()
+    escenarios = {e.nombre: e for e in ESCENARIOS}
+    resumen, tickets_por_plan, por_cola = [], {}, None
+    for nombre in PLANES_SIMULADOS:
+        inst = replace(escenarios[nombre].transformar(base), nombre=nombre)
+        res = resolver(inst)
+        tickets = simular_plan(inst, res)
+        tickets_por_plan[nombre] = tickets
+        resumen.append(resumir(tickets, base.meta_espera_min, nombre))
+        if nombre == "Base":
+            por_cola = comparar_por_cola(tickets, res)
+    resumen = pd.DataFrame(resumen)
+    print(f"\n=== Simulación SimPy ({N_REPLICAS} réplicas de la semana) ===")
+    print(resumen.to_string(index=False))
+    print("Archivos generados:")
+    for r in guardar_simulacion(resumen, por_cola, tickets_por_plan, base.meta_espera_min):
         print("  -", r.relative_to(config.RAIZ))
 
 
@@ -105,6 +137,7 @@ def ejecutar_todo() -> None:
     opcion_modelo_base()
     opcion_reducida()
     opcion_escenarios()
+    opcion_simulacion()
 
 
 OPCIONES = {
@@ -112,7 +145,8 @@ OPCIONES = {
     "2": ("Resolver modelo base (semana completa)", opcion_modelo_base),
     "3": ("Resolver instancia reducida (para Excel Solver)", opcion_reducida),
     "4": ("Analizar escenarios", opcion_escenarios),
-    "5": ("Ejecutar todo", ejecutar_todo),
+    "5": ("Simular la semana con SimPy", opcion_simulacion),
+    "6": ("Ejecutar todo", ejecutar_todo),
 }
 
 

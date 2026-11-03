@@ -1,0 +1,6 @@
+# Configuración de la interfaz (streamlit run app.py)
+[server]
+address = "localhost"   # solo se abre en este computador, no en la red
+
+[browser]
+gatherUsageStats = false   # no enviar estadísticas de uso a Streamlit

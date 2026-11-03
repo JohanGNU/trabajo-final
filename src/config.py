@@ -25,10 +25,14 @@ FIN_DE_SEMANA = {"Sab", "Dom"}
 RECARGO_NOCTURNO = 0.35      # +35 % sobre el valor del turno
 RECARGO_DOMINICAL = 0.75     # +75 % sobre el valor del turno
 DIA_DOMINICAL = "Dom"
-PENALIZACION_DEFICIT = 1_000_000  # COP por cada técnico que falte en un turno
+PENALIZACION_DEFICIT = 1_000_000      # COP base por técnico que falte para cumplir la meta de espera
+PENALIZACION_ESTABILIDAD = 10_000_000 # COP por técnico que falte para que la cola sea estable
+COSTO_ESPERA_HORA = 20_000            # COP por cada hora que un ticket espera en cola
+HORAS_TURNO = 8
 
 # --- Parámetros de servicio ----------------------------------------------
-RHO_MAX = 0.85               # utilización máxima aceptada por técnico
+META_ESPERA_MIN = 15         # espera media máxima en cola Wq (minutos), modelo M/M/c
+RHO_MAX = 0.85               # regla de carga anterior (solo para comparar)
 
 # --- Solver ---------------------------------------------------------------
 TIEMPO_LIMITE_S = 120

@@ -1,7 +1,7 @@
-﻿turno,tipo,lambda_tickets_hora,mu_tickets_hora,requeridos
-Sab-Mañana,Redes,1.097,1.5,1
-Sab-Mañana,Software,1.702,2.0,2
-Sab-Tarde,Redes,0.848,1.5,1
-Sab-Tarde,Software,1.428,2.0,1
-Sab-Noche,Redes,0.193,1.5,1
-Sab-Noche,Software,0.32,2.0,1
+﻿turno,tipo,lambda_tickets_hora,mu_tickets_hora,minimos,requeridos
+Sab-Mañana,Redes,1.097,1.5,1,2
+Sab-Mañana,Software,1.702,2.0,1,2
+Sab-Tarde,Redes,0.848,1.5,1,2
+Sab-Tarde,Software,1.428,2.0,1,2
+Sab-Noche,Redes,0.193,1.5,1,1
+Sab-Noche,Software,0.32,2.0,1,1

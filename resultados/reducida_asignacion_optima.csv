@@ -1,8 +1,10 @@
 ﻿tecnico,nivel,dia,franja,turno,tipo,costo_cop
 T01,Junior,Sab,Mañana,Sab-Mañana,Redes,95000
-T04,Junior,Sab,Noche,Sab-Noche,Redes,128250
-T06,Junior,Sab,Tarde,Sab-Tarde,Software,95000
-T08,Junior,Sab,Mañana,Sab-Mañana,Software,95000
-T11,Junior,Sab,Noche,Sab-Noche,Software,128250
-T12,Junior,Sab,Tarde,Sab-Tarde,Redes,95000
-T13,Junior,Sab,Mañana,Sab-Mañana,Software,95000
+T02,Junior,Sab,Noche,Sab-Noche,Redes,128250
+T03,Junior,Sab,Tarde,Sab-Tarde,Redes,95000
+T04,Junior,Sab,Mañana,Sab-Mañana,Redes,95000
+T06,Junior,Sab,Mañana,Sab-Mañana,Software,95000
+T08,Junior,Sab,Noche,Sab-Noche,Software,128250
+T09,Senior,Sab,Tarde,Sab-Tarde,Software,150000
+T11,Junior,Sab,Mañana,Sab-Mañana,Software,95000
+T12,Junior,Sab,Tarde,Sab-Tarde,Software,95000
