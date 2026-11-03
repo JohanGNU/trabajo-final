@@ -10,16 +10,22 @@ estable, aquí la semana corre de forma continua (21 turnos de 8 h, 168 h):
     - los tickets que no alcanzan a atenderse pasan al turno siguiente.
 Así se mide el efecto de los traspasos entre turnos (por ejemplo, Hardware, que
 no opera de noche) y la variabilidad entre semanas (réplicas con semilla fija).
+
+El simulador se valida con `validar_contra_mmc`: una cola con tasa constante y
+técnicos que atienden toda la semana sin cambios de turno es una M/M/c, así que
+la espera simulada debe coincidir con la fórmula de Erlang C.
 """
 import numpy as np
 import pandas as pd
 import simpy
 
 from src import config
+from src.colas import metricas_mmc
 from src.datos import Instancia
 from src.modelo import Resultado
 
 N_REPLICAS = 30
+N_REPLICAS_VALIDACION = 300
 
 
 def _llegadas(env, cola, tipo, lam_turno, turnos, rng, registros):
@@ -73,19 +79,56 @@ def simular_semana(inst: Instancia, res: Resultado, semilla: int) -> list[dict]:
     return registros
 
 
+def _filas_tickets(registros: list[dict], replica: int, fin_h: float) -> list[dict]:
+    """Una fila por ticket de una réplica, con su espera en cola en minutos."""
+    filas = []
+    for t in registros:
+        atendido = t["inicio_h"] is not None
+        # Un ticket sin atender al cierre de la semana cuenta con la espera que lleva
+        espera_h = (t["inicio_h"] if atendido else fin_h) - t["llegada_h"]
+        filas.append({"replica": replica, "tipo": t["tipo"], "turno": t["turno"],
+                      "espera_min": espera_h * 60, "atendido": atendido})
+    return filas
+
+
 def simular_plan(inst: Instancia, res: Resultado, n_replicas: int = N_REPLICAS,
                  semilla: int = config.SEMILLA) -> pd.DataFrame:
     """Tickets de todas las réplicas, con su espera en cola en minutos."""
     fin_semana = len(inst.turnos) * config.HORAS_TURNO
     filas = []
     for r in range(n_replicas):
-        for t in simular_semana(inst, res, semilla + r):
-            atendido = t["inicio_h"] is not None
-            # Un ticket sin atender al cierre de la semana cuenta con la espera que lleva
-            espera_h = (t["inicio_h"] if atendido else fin_semana) - t["llegada_h"]
-            filas.append({"replica": r, "tipo": t["tipo"], "turno": t["turno"],
-                          "espera_min": espera_h * 60, "atendido": atendido})
+        filas += _filas_tickets(simular_semana(inst, res, semilla + r), r, fin_semana)
     return pd.DataFrame(filas)
+
+
+def validar_contra_mmc(inst: Instancia, turno: str, tipo: str, tecnicos: int,
+                       n_replicas: int = N_REPLICAS_VALIDACION,
+                       semilla: int = config.SEMILLA) -> dict:
+    """
+    Valida el simulador frente a la fórmula M/M/c. Toma la tasa lambda de la cola
+    (turno, tipo), la mantiene constante toda la semana y pone `tecnicos` técnicos que
+    atienden las 168 h sin cambios de turno. Ese sistema es una cola M/M/c, así que la
+    espera simulada debe coincidir con la fórmula, salvo el error de muestreo.
+    """
+    lam, mu = inst.lam[turno, tipo], inst.mu[tipo]
+    fin_semana = len(inst.turnos) * config.HORAS_TURNO
+    filas = []
+    for r in range(n_replicas):
+        rng = np.random.default_rng(semilla + r)
+        env = simpy.Environment()
+        cola, registros = simpy.Store(env), []
+        env.process(_llegadas(env, cola, tipo, {s: lam for s in inst.turnos}, inst.turnos,
+                              rng, registros))
+        for _ in range(tecnicos):
+            env.process(_tecnico(env, cola, 0, fin_semana, mu, rng))
+        env.run(until=fin_semana)
+        filas += _filas_tickets(registros, r, fin_semana)
+    sim = resumir(pd.DataFrame(filas), inst.meta_espera_min, f"{turno} {tipo}")
+    return {"cola": f"{turno} {tipo}", "lambda_tickets_hora": lam, "mu_tickets_hora": mu,
+            "tecnicos": tecnicos, "replicas": n_replicas,
+            "wq_simulada_min": sim["wq_media_min"], "ic95_inf_min": sim["ic95_inf_min"],
+            "ic95_sup_min": sim["ic95_sup_min"],
+            "wq_mmc_min": round(metricas_mmc(lam, mu, tecnicos)["wq_min"], 2)}
 
 
 def resumir(tickets: pd.DataFrame, meta_min: float, nombre: str) -> dict:

@@ -32,8 +32,8 @@ python main.py --todo
 ```
 
 Esto genera los datos (semilla fija = 42), resuelve el modelo base, resuelve la
-instancia reducida para Excel Solver, analiza los escenarios, simula la semana con SimPy
-y guarda las tablas y los gráficos en `resultados/` (unos 15 segundos). Si `verificacion_solver.xlsx` no existe, también lo crea
+instancia reducida para Excel Solver, analiza los escenarios, simula la semana con SimPy,
+valida el simulador frente a la fórmula M/M/c y guarda las tablas y los gráficos en `resultados/` (unos 15 segundos). Si `verificacion_solver.xlsx` no existe, también lo crea
 (si ya existe no se toca, porque guarda la configuración de Solver).
 
 Para usar el menú interactivo, ejecuta `python main.py`.
@@ -111,4 +111,5 @@ La formulación completa está en el encabezado de `src/modelo.py`.
 | `barrido_meta_espera.csv`, `fig5_barrido_meta_espera.png` | Técnicos requeridos y colas que cumplen, con metas de 5 a 60 min |
 | `simulacion_resumen.csv`, `fig7_simulacion_espera.png` | Espera simulada (SimPy, 30 réplicas) de los planes Base, E3 y E7 |
 | `simulacion_por_cola.csv`, `fig8_mmc_vs_simulacion.png` | Espera por turno y tipo: fórmula M/M/c frente a la simulación |
+| `validacion_simulacion.csv` | Validación del simulador: una cola con técnicos toda la semana (300 réplicas) frente a la fórmula M/M/c |
 | `reducida_*.csv` | Instancia reducida (sábado, Redes y Software, 9 técnicos) y su solución, para verificarla en Excel Solver |

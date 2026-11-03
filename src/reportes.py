@@ -276,16 +276,19 @@ def grafico_mmc_vs_simulacion(por_cola: pd.DataFrame, ruta: Path, plan: str = "p
     plt.close(fig)
 
 
-def guardar_simulacion(resumen: pd.DataFrame, por_cola: pd.DataFrame, tickets_por_plan: dict,
-                       meta_min: float, destino: Path = config.DIR_RESULTADOS) -> list[Path]:
-    """Guarda las tablas y los gráficos de la simulación."""
+def guardar_simulacion(resumen: pd.DataFrame, por_cola: pd.DataFrame, validacion: pd.DataFrame,
+                       tickets_por_plan: dict, meta_min: float,
+                       destino: Path = config.DIR_RESULTADOS) -> list[Path]:
+    """Guarda las tablas y los gráficos de la simulación y de su validación."""
     destino.mkdir(parents=True, exist_ok=True)
     rutas = [destino / "simulacion_resumen.csv", destino / "simulacion_por_cola.csv",
+             destino / "validacion_simulacion.csv",
              destino / "fig7_simulacion_espera.png", destino / "fig8_mmc_vs_simulacion.png"]
     resumen.to_csv(rutas[0], index=False, encoding="utf-8-sig")
     por_cola.to_csv(rutas[1], index=False, encoding="utf-8-sig")
-    grafico_cdf_espera(tickets_por_plan, rutas[2], meta_min)
-    grafico_mmc_vs_simulacion(por_cola, rutas[3])
+    validacion.to_csv(rutas[2], index=False, encoding="utf-8-sig")
+    grafico_cdf_espera(tickets_por_plan, rutas[3], meta_min)
+    grafico_mmc_vs_simulacion(por_cola, rutas[4])
     return rutas
 
 

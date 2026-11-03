@@ -19,13 +19,16 @@ from src.excel_solver import crear_libro_solver
 from src.modelo import Resultado, resolver, verificar_solucion
 from src.reportes import (exportar_instancia, generar_graficos, guardar_escenarios,
                           guardar_simulacion, guardar_tablas)
-from src.simulacion import N_REPLICAS, comparar_por_cola, resumir, simular_plan
+from src.simulacion import (N_REPLICAS, comparar_por_cola, resumir, simular_plan,
+                            validar_contra_mmc)
 
 # Instancia reducida que se verifica en Excel Solver (máximo 200 variables)
 REDUCIDA = {"dias": ["Sab"], "tipos": ["Redes", "Software"], "n_tecnicos": 9}
 LIBRO_SOLVER = config.RAIZ / "verificacion_solver.xlsx"
 # Planes que se prueban en la simulación: el base, la mejor alternativa y la regla sin colas
 PLANES_SIMULADOS = ["Base", "E3 Hasta 6 turnos", "E7 Regla 85% (sin colas)"]
+# Cola con la que se valida el simulador frente a M/M/c (el ejemplo del informe, con r = 3)
+COLA_VALIDACION = ("Lun-Mañana", "Software", 3)
 
 
 def mostrar_resultado(inst: Instancia, res: Resultado) -> None:
@@ -127,8 +130,12 @@ def opcion_simulacion() -> None:
     resumen = pd.DataFrame(resumen)
     print(f"\n=== Simulación SimPy ({N_REPLICAS} réplicas de la semana) ===")
     print(resumen.to_string(index=False))
+    validacion = pd.DataFrame([validar_contra_mmc(base, *COLA_VALIDACION)])
+    print("\n=== Validación del simulador: técnicos toda la semana frente a M/M/c ===")
+    print(validacion.to_string(index=False))
     print("Archivos generados:")
-    for r in guardar_simulacion(resumen, por_cola, tickets_por_plan, base.meta_espera_min):
+    for r in guardar_simulacion(resumen, por_cola, validacion, tickets_por_plan,
+                                base.meta_espera_min):
         print("  -", r.relative_to(config.RAIZ))
 
 
