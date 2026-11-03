@@ -1,6 +1,13 @@
+# Entorno y archivos generados por Python
 .venv/
 __pycache__/
 *.pyc
+
+# Temporales de Excel
 ~$*.xlsx
+
+# Enunciado del curso (no es parte del código)
 proyecto-final.txt
+
+# Material interno de estudio
 Guia_de_estudio*.pdf
